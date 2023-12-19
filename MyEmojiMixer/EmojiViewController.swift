@@ -8,17 +8,16 @@
 import UIKit
 
 final class EmojiViewController: UIViewController {
+    private let emojiMixerFactory = EmojiMixerFactory()
+    private let emojiMixStore = EmojiMixStore()
     
-    private var visibleEmojies: [String] = []
+    private var visibleEmojiesMix: [EmojiMix] = []
     
     let collectionView: UICollectionView = {
         let colView = UICollectionView(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
         colView.translatesAutoresizingMaskIntoConstraints = false
         return colView
     }()
-    
-    // Отображаем в коллекции ячеек
-    private let emojies = ["🍇", "🍈", "🍉", "🍊", "🍋", "🍌", "🍍", "🥭", "🍎", "🍏", "🍐", "🍒", "🍓", "🫐", "🥝", "🍅", "🫒", "🥥", "🥑", "🍆", "🥔", "🥕", "🌽", "🌶️", "🫑", "🥒", "🥬", "🥦", "🧄", "🧅", "🍄"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,29 +32,18 @@ final class EmojiViewController: UIViewController {
         collectionView.delegate = self
         
         if let navigationBar = navigationController?.navigationBar {
-            let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addEmoji))
+            let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewEmojiMixer))
             navigationBar.topItem?.setRightBarButton(addButton, animated: false)
-            let removeButton = UIBarButtonItem(barButtonSystemItem: .undo, target: self, action: #selector(removeLastEmoji))
-            navigationBar.topItem?.setLeftBarButton(removeButton, animated: false)
         }
-    }
-    
-    @objc private func addEmoji() {
-        guard visibleEmojies.count < emojies.count else { return }
-        let nextEmojiesIndex = visibleEmojies.count
-        visibleEmojies.append(emojies[nextEmojiesIndex])
-        collectionView.performBatchUpdates {
-            collectionView.insertItems(at: [IndexPath(item: nextEmojiesIndex, section: 0)])
-        }
-    }
-    
-    @objc private func removeLastEmoji() {
-        guard !visibleEmojies.isEmpty else { return }
         
-        let lastEmojies = visibleEmojies.count - 1
-        visibleEmojies.removeLast()
+    }
+    
+    @objc private func addNewEmojiMixer() {
+        let newEmojiMix = emojiMixerFactory.makeNewMix()
+        let newtEmojiesIndex = visibleEmojiesMix.count
+        visibleEmojiesMix.append(newEmojiMix)
         collectionView.performBatchUpdates {
-            collectionView.deleteItems(at: [IndexPath(item: lastEmojies, section: 0)])
+            collectionView.insertItems(at: [IndexPath(item: newtEmojiesIndex, section: 0)])
         }
     }
 
@@ -66,6 +54,7 @@ final class EmojiViewController: UIViewController {
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor)
         ])
+        collectionView.contentInset = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
     }
 }
 
@@ -79,7 +68,7 @@ extension EmojiViewController: UICollectionViewDataSource {
     
     // кол-во ячеек в секции
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        visibleEmojies.count
+        visibleEmojiesMix.count
     }
     
     // настройка и возвращение ячеек для отображения в UICollectionView
@@ -89,8 +78,9 @@ extension EmojiViewController: UICollectionViewDataSource {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? EmojiesCell else {
             return UICollectionViewCell()
         }
-        cell.labelForCell.text = emojies[indexPath.row]
-        
+        let emojiMix = visibleEmojiesMix[indexPath.row]
+        cell.labelForCell.text = emojiMix.emoji
+        cell.contentView.backgroundColor = emojiMix.colorBackground
         return cell
     }
     
@@ -99,11 +89,16 @@ extension EmojiViewController: UICollectionViewDataSource {
 extension EmojiViewController: UICollectionViewDelegateFlowLayout {
     //MARK: - Размеры ячеек. Исходя из контента:
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        CGSize(width: collectionView.bounds.width/2, height: 50)
+        let inSet = collectionView.contentInset //Получение отступов от краев коллекции.
+        let vailableWidth = collectionView.bounds.width - inSet.left - inSet.right //Вычисление доступной ширины для ячейки, учитывая отступы.
+        let minSpacing = 10.0 //Определение минимального расстояния между ячейками.
+        let itemsPerRow = 2.0 //Определение количества элементов в строке.
+        let itemWidth = (vailableWidth - (itemsPerRow - 1) * minSpacing) / itemsPerRow //вычисление ширины каждой ячейки. Рассчитывается как доступная ширина за вычетом промежутков между ячейками, деленная на количество элементов в строке.
+        return CGSize(width: itemWidth, height: itemWidth)
     }
-    //MARK: - Размеры ячеек. Убрать отступ
+    //MARK: - Убрать или указать размер отступа (минимальное расстояние между элементами (ячейками) внутри одной секции )
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        0
+        10.0
     }
 }
 

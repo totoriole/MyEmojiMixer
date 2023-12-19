@@ -15,7 +15,10 @@ final class EmojiesCell: UICollectionViewCell {
         super.init(frame: frame)
         
         contentView.addSubview(labelForCell)
+        contentView.layer.cornerRadius = 10
+        contentView.layer.masksToBounds = true
         labelForCell.translatesAutoresizingMaskIntoConstraints = false
+        
         
         NSLayoutConstraint.activate([
             labelForCell.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
