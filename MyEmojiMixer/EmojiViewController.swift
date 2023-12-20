@@ -41,7 +41,9 @@ final class EmojiViewController: UIViewController {
     @objc private func addNewEmojiMixer() {
         let newEmojiMix = emojiMixerFactory.makeNewMix()
         let newtEmojiesIndex = visibleEmojiesMix.count
-        visibleEmojiesMix.append(newEmojiMix)
+        try! emojiMixStore.addNewEmojiMix(newEmojiMix)
+        visibleEmojiesMix = try! emojiMixStore.fetchEmojiMixes()
+//        visibleEmojiesMix.append(newEmojiMix)
         collectionView.performBatchUpdates {
             collectionView.insertItems(at: [IndexPath(item: newtEmojiesIndex, section: 0)])
         }
