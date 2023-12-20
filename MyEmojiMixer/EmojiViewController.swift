@@ -35,7 +35,7 @@ final class EmojiViewController: UIViewController {
             let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewEmojiMixer))
             navigationBar.topItem?.setRightBarButton(addButton, animated: false)
         }
-        
+        visibleEmojiesMix = try! emojiMixStore.fetchEmojiMixes()
     }
     
     @objc private func addNewEmojiMixer() {
